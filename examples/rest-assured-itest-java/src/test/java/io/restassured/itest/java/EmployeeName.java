@@ -9,10 +9,11 @@ package io.restassured.itest.java;
  *
  * @author Ming
  */
-public class Name {
-    String firstName;
-    String lastName;
-    String fullName;
+public class EmployeeName {
+   public String firstName;
+   public  String lastName;
+   
+ 
 
     public String getFirstName() {
         return firstName;
@@ -30,16 +31,6 @@ public class Name {
         this.lastName = lastName;
     }
 
-    public String getFullName() {
-        return fullName;
-    }
 
-    public void setFullName(String fullName) {
-        this.fullName = fullName;
-    }
-
-  
-  
-    
     
 }
