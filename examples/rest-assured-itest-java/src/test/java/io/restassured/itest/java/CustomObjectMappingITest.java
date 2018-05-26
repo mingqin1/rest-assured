@@ -15,8 +15,6 @@
  */
 package io.restassured.itest.java;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import io.restassured.RestAssured;
 import io.restassured.config.ObjectMapperConfig;
 import io.restassured.config.RestAssuredConfig;
@@ -26,7 +24,6 @@ import io.restassured.itest.java.support.WithJetty;
 import io.restassured.mapper.ObjectMapper;
 import io.restassured.mapper.ObjectMapperDeserializationContext;
 import io.restassured.mapper.ObjectMapperSerializationContext;
-import io.restassured.mapper.factory.GsonObjectMapperFactory;
 import org.apache.commons.lang3.StringUtils;
 import org.junit.Before;
 import org.junit.Test;
@@ -34,26 +31,30 @@ import org.junit.Test;
 import java.lang.reflect.Type;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static com.google.gson.FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES;
 import static io.restassured.RestAssured.given;
 import static io.restassured.config.ObjectMapperConfig.objectMapperConfig;
 import static io.restassured.mapper.ObjectMapperType.GSON;
+import static io.restassured.mapper.ObjectMapperType.JACKSON_2;
+import io.restassured.mapper.factory.Jackson2ObjectMapperFactory;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
 
 public class CustomObjectMappingITest extends WithJetty {
+
     public AtomicBoolean customSerializationUsed = new AtomicBoolean(false);
     public AtomicBoolean customDeserializationUsed = new AtomicBoolean(false);
 
-    @Before public void
-    setup() throws Exception {
+    @Before
+    public void
+            setup() throws Exception {
         customSerializationUsed.set(false);
         customDeserializationUsed.set(false);
     }
 
-    @Test public void
-    using_explicit_custom_object_mapper() throws Exception {
+    @Test
+    public void
+            using_explicit_custom_object_mapper() throws Exception {
         final Message message = new Message();
         message.setMessage("A message");
         final ObjectMapper mapper = new ObjectMapper() {
@@ -81,8 +82,9 @@ public class CustomObjectMappingITest extends WithJetty {
         assertThat(customDeserializationUsed.get(), is(true));
     }
 
-    @Test public void
-    using_custom_object_mapper_statically() {
+    @Test
+    public void
+            using_custom_object_mapper_statically() {
         final Message message = new Message();
         message.setMessage("A message");
         final ObjectMapper mapper = new ObjectMapper() {
@@ -111,8 +113,9 @@ public class CustomObjectMappingITest extends WithJetty {
         assertThat(customDeserializationUsed.get(), is(true));
     }
 
-    @Test public void
-    using_default_object_mapper_type_if_specified() {
+    @Test
+    public void
+            using_default_object_mapper_type_if_specified() {
         final Message message = new Message();
         message.setMessage("A message");
         RestAssured.config = RestAssuredConfig.config().objectMapperConfig(new ObjectMapperConfig(GSON));
@@ -124,7 +127,7 @@ public class CustomObjectMappingITest extends WithJetty {
 
     @Test
     public void
-    using_as_specified_object() {
+            using_as_specified_object() {
         final Message message = new Message();
         message.setMessage("A message");
         RestAssured.config = RestAssuredConfig.config().objectMapperConfig(new ObjectMapperConfig(GSON));
@@ -135,21 +138,33 @@ public class CustomObjectMappingITest extends WithJetty {
         assertThat(returnedMessage, equalTo("A message"));
     }
 
-    @Test public void
-    using_custom_object_mapper_factory() {
+    @Test
+    public void
+            using_custom_object_mapper_factory() {
         final Greeting greeting = new Greeting();
         greeting.setFirstName("John");
         greeting.setLastName("Doe");
-        RestAssured.config = RestAssuredConfig.config().objectMapperConfig(objectMapperConfig().gsonObjectMapperFactory(
-                new GsonObjectMapperFactory() {
-                    public Gson create(Type cls, String charset) {
-                        return new GsonBuilder().setFieldNamingPolicy(LOWER_CASE_WITH_UNDERSCORES).create();
-                    }
-                }
+//        RestAssured.config = RestAssuredConfig.config().objectMapperConfig(objectMapperConfig().gsonObjectMapperFactory(
+//                new GsonObjectMapperFactory() {
+//                    public Gson create(Type cls, String charset) {
+//                        return new GsonBuilder().setFieldNamingPolicy(LOWER_CASE_WITH_UNDERSCORES).create();
+//                    }
+//                }
+//        ));
+//
+//        final Greeting returnedGreeting = given().contentType("application/json").body(greeting, GSON).
+//                expect().body("first_name", equalTo("John")).when().post("/reflect").as(Greeting.class, GSON);
+        RestAssured.config = RestAssuredConfig.config().objectMapperConfig(objectMapperConfig().jackson2ObjectMapperFactory(
+                new Jackson2ObjectMapperFactory() {
+            public com.fasterxml.jackson.databind.ObjectMapper create(Type cls, String charset) {
+                return new com.fasterxml.jackson.databind.ObjectMapper().findAndRegisterModules();
+            }
+
+        }
         ));
 
-        final Greeting returnedGreeting = given().contentType("application/json").body(greeting, GSON).
-                expect().body("first_name", equalTo("John")).when().post("/reflect").as(Greeting.class, GSON);
+        final Greeting returnedGreeting = given().contentType("application/json").body(greeting, JACKSON_2).
+                expect().body("firstName", equalTo("John")).when().post("/reflect").as(Greeting.class, JACKSON_2);
 
         assertThat(returnedGreeting.getFirstName(), equalTo("John"));
         assertThat(returnedGreeting.getLastName(), equalTo("Doe"));
