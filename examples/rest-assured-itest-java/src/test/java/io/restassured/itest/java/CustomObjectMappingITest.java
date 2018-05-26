@@ -15,6 +15,7 @@
  */
 package io.restassured.itest.java;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import io.restassured.RestAssured;
 import io.restassured.config.ObjectMapperConfig;
 import io.restassured.config.RestAssuredConfig;
@@ -28,14 +29,12 @@ import org.apache.commons.lang3.StringUtils;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.lang.reflect.Type;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static io.restassured.RestAssured.given;
-import static io.restassured.config.ObjectMapperConfig.objectMapperConfig;
 import static io.restassured.mapper.ObjectMapperType.GSON;
 import static io.restassured.mapper.ObjectMapperType.JACKSON_2;
-import io.restassured.mapper.factory.Jackson2ObjectMapperFactory;
+import java.io.IOException;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
@@ -140,7 +139,7 @@ public class CustomObjectMappingITest extends WithJetty {
 
     @Test
     public void
-            using_custom_object_mapper_factory() {
+            using_custom_object_mapper_factory() throws IOException {
         final Greeting greeting = new Greeting();
         greeting.setFirstName("John");
         greeting.setLastName("Doe");
@@ -154,17 +153,27 @@ public class CustomObjectMappingITest extends WithJetty {
 //
 //        final Greeting returnedGreeting = given().contentType("application/json").body(greeting, GSON).
 //                expect().body("first_name", equalTo("John")).when().post("/reflect").as(Greeting.class, GSON);
-        RestAssured.config = RestAssuredConfig.config().objectMapperConfig(objectMapperConfig().jackson2ObjectMapperFactory(
-                new Jackson2ObjectMapperFactory() {
-            public com.fasterxml.jackson.databind.ObjectMapper create(Type cls, String charset) {
-                return new com.fasterxml.jackson.databind.ObjectMapper().findAndRegisterModules();
-            }
-
-        }
-        ));
+//        RestAssured.config = RestAssuredConfig.config().objectMapperConfig(objectMapperConfig().jackson2ObjectMapperFactory(
+//                new Jackson2ObjectMapperFactory() {
+//            public com.fasterxml.jackson.databind.ObjectMapper create(Type cls, String charset) {
+//                return new com.fasterxml.jackson.databind.ObjectMapper().findAndRegisterModules();
+//            }
+//
+//        }
+//        ));
 
         final Greeting returnedGreeting = given().contentType("application/json").body(greeting, JACKSON_2).
                 expect().body("firstName", equalTo("John")).when().post("/reflect").as(Greeting.class, JACKSON_2);
+        
+         final Name returnedName = given().contentType("application/json").body(greeting, JACKSON_2).
+                when().post("/reflect").as(Name.class, JACKSON_2);
+        
+        
+        final String jsonStr  = "{ \"firstName\" : \"John\", \"lastName\" :  \"Doe\"}";
+        String returnedGreetingString = given().contentType("application/json").body(jsonStr, JACKSON_2)
+                .when().post("/reflect").asString();
+        
+    
 
         assertThat(returnedGreeting.getFirstName(), equalTo("John"));
         assertThat(returnedGreeting.getLastName(), equalTo("Doe"));
