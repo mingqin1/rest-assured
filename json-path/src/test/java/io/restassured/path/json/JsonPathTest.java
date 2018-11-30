@@ -30,7 +30,7 @@ import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.assertThat;
 
 public class JsonPathTest {
-
+   // remove a comments
     private final String JSON = "{ \"store\": {\n" +
             "    \"book\": [ \n" +
             "      { \"category\": \"reference\",\n" +
