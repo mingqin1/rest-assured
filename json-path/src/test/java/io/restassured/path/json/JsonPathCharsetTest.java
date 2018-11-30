@@ -30,7 +30,7 @@ import static org.junit.Assert.assertThat;
 
 public class JsonPathCharsetTest {
 
-    //add a comment-master 
+    //add a comment-master -1
     private static final String GREETING_WITH_STRANGE_CHARS =  "{ \"greeting\" : { \n" +
           "                \"firstName\" : \"€%#åö\", \n" +
           "                \"lastName\" : \"`ü\" \n" +
